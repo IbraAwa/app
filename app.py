@@ -50,7 +50,7 @@ def init_db():
     conn.executemany("INSERT INTO dossiers VALUES (?, ?, ?, ?)", [
         (1, 1, "Note de recrue", "Rien a signaler."),
         (2, 2, "Dossier du chef", "Agenda et contacts du chef. Confidentiel."),
-        (3, 2, "OPERATION FINALE", "Dossier classifie. Acces reserve au chef."),
+        (3, 2, "OPERATION FINALE", "Recette : gâteau au chocolat pour ma dulciné. Ingrédients : 200 g de chocolat noir, 150 g de beurre, 4 oeufs, 150 g de sucre, 80 g de farine, 1 cuillère à café de levure. Préparation : faire fondre le chocolat et le beurre. Fouetter les oeufs avec le sucre, ajouter le mélange chocolat, puis la farine et la levure. Cuire 25 minutes à 180 degrés."),
     ])
     conn.commit()
     conn.close()
@@ -209,7 +209,12 @@ def dossier(dossier_id):
     if not rows:
         abort(404)
     d = rows[0]
-    resp = make_response(jsonify(id=d[0], owner_id=d[1], titre=d[2], contenu=d[3]))
+    payload = dict(id=d[0], owner_id=d[1], titre=d[2], contenu=d[3])
+    if dossier_id == 3:
+        payload["operation"] = "Faire plaisir à ma dulciné"
+        payload["deroule"] = ("Date : fin 2027, 14h00. Achat des ingrédients figurant dans la liste "
+                              "de la page précédente, par les membres du cartel. Aucun vol d'ingrédient.")
+    resp = make_response(jsonify(**payload))
     if dossier_id == 3:
         resp.headers["X-Mission-Trace"] = base64.b64encode(FLAG_API.encode()).decode()
     return resp
