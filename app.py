@@ -200,6 +200,49 @@ def statut():
     return resp
 
 
+OPERATION_EXTRAS = {
+    3: {
+        "operation": "Faire plaisir à ma dulciné",
+        "deroule": ("Date : fin 2027, 14h00. Achat des ingrédients figurant dans la liste "
+                    "de la page précédente, par les membres du cartel. Aucun vol d'ingrédient."),
+    },
+}
+
+DOSSIER_TPL = """<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Dossier {{ d.id }} - {{ d.titre }}</title>
+<style>
+:root{--cork-a:#bf8b5c;--cork-b:#a46a42;--paper:#f7f0e1;--ink:#2a1d14;--red:#6b1a22;--red-bright:#b8102a}
+body{margin:0;min-height:100vh;padding:24px 16px;font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at 20% 10%,var(--cork-a),var(--cork-b));color:var(--ink)}
+.feuille{position:relative;max-width:720px;margin:0 auto;background:var(--paper);
+  padding:32px 28px;box-shadow:0 12px 30px rgba(0,0,0,.35);transform:rotate(-.4deg)}
+.feuille::before{content:"";position:absolute;left:50%;top:-10px;width:18px;height:18px;margin-left:-9px;
+  border-radius:50%;background:var(--red-bright);box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tampon{display:inline-block;border:3px solid var(--red-bright);color:var(--red-bright);
+  padding:4px 12px;font:700 14px "Courier New",monospace;letter-spacing:3px;transform:rotate(-6deg);opacity:.85}
+h1{font-size:1.9rem;color:var(--red);margin:14px 0 6px;text-transform:uppercase;letter-spacing:1px}
+.meta{font:14px "Courier New",monospace;color:#5b4a3a;margin-bottom:18px}
+h2{font-size:1.1rem;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:4px;margin-top:26px}
+p{line-height:1.6;margin:8px 0}
+.bloc{background:#fffaf0;border-left:4px solid var(--red);padding:12px 16px;margin-top:10px}
+a{color:var(--red)}
+</style></head><body>
+<div class="feuille">
+  <span class="tampon">CONFIDENTIEL</span>
+  <h1>{{ d.titre }}</h1>
+  <div class="meta">Dossier n° {{ d.id }} · Propriétaire : membre {{ d.owner_id }}</div>
+  {% if operation %}<h2>Opération</h2><div class="bloc"><p><strong>{{ operation }}</strong></p></div>{% endif %}
+  <h2>Contenu</h2>
+  <div class="bloc"><p>{{ d.contenu }}</p></div>
+  {% if deroule %}<h2>Déroulé</h2><div class="bloc"><p>{{ deroule }}</p></div>{% endif %}
+  <p style="margin-top:28px"><a href="/recherche">Retour à l'intranet</a></p>
+</div>
+</body></html>"""
+
+
 @app.route("/api/v1/dossiers/<int:dossier_id>")
 def dossier(dossier_id):
     if "user" not in session:
@@ -210,14 +253,29 @@ def dossier(dossier_id):
         abort(404)
     d = rows[0]
     payload = dict(id=d[0], owner_id=d[1], titre=d[2], contenu=d[3])
-    if dossier_id == 3:
-        payload["operation"] = "Faire plaisir à ma dulciné"
-        payload["deroule"] = ("Date : fin 2027, 14h00. Achat des ingrédients figurant dans la liste "
-                              "de la page précédente, par les membres du cartel. Aucun vol d'ingrédient.")
+    payload.update(OPERATION_EXTRAS.get(dossier_id, {}))
     resp = make_response(jsonify(**payload))
     if dossier_id == 3:
         resp.headers["X-Mission-Trace"] = base64.b64encode(FLAG_API.encode()).decode()
     return resp
+
+
+@app.route("/dossiers/<int:dossier_id>")
+def dossier_page(dossier_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+    # Requete parametree : cette page n'introduit pas de faille, la faille IDOR reste sur l'API.
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        row = conn.execute("SELECT id, owner_id, titre, contenu FROM dossiers WHERE id = ?",
+                           (dossier_id,)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        abort(404)
+    d = dict(id=row[0], owner_id=row[1], titre=row[2], contenu=row[3])
+    extras = OPERATION_EXTRAS.get(dossier_id, {})
+    return render_template_string(DOSSIER_TPL, d=d, **extras)
 
 
 @app.route("/chef/salle-secrete", methods=["GET", "POST"])
