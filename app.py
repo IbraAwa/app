@@ -69,36 +69,78 @@ def run_query(sql):
 
 BASE = """<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Cartel - {{ title }}</title>
 <style>
-body{font-family:system-ui,sans-serif;background:#111;color:#ddd;margin:2rem;max-width:900px}
-input,button{padding:.4rem;margin:.2rem}
-table{border-collapse:collapse;margin-top:1rem}
-td{border:1px solid #444;padding:.3rem .6rem}
-.err{color:#f66}.flag{color:#6f6;font-weight:bold;font-size:1.2rem}
+:root{--bg:#0c0a08;--panel:#16110d;--panel2:#1d1711;--red:#b11226;--red-d:#7a0f1c;--gold:#d9b24a;--bone:#ece4d2;--mute:#9a8c74;--line:#3a2e22}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Roboto,system-ui,sans-serif;color:var(--bone);margin:0;min-height:100vh;line-height:1.55;
+ background:radial-gradient(1200px 520px at 50% -12%,#241a12 0%,transparent 60%),radial-gradient(900px 600px at 100% 120%,#1a1109 0%,transparent 55%),var(--bg)}
+a{color:var(--gold);text-decoration:none}a:hover{color:#f0cf7a;text-decoration:underline}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;
+ padding:1rem 1.6rem;background:linear-gradient(180deg,#140d08,#0b0705);border-bottom:3px solid var(--red);position:relative}
+.topbar:after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:3px;
+ background:repeating-linear-gradient(45deg,var(--gold) 0 14px,#0b0705 14px 28px);opacity:.45}
+.brand{font-weight:800;letter-spacing:3px;font-size:1.25rem;text-transform:uppercase;color:var(--bone)}
+.brand .seal{color:var(--gold);margin-right:.45rem;text-shadow:0 0 10px rgba(217,178,74,.6)}
+.brand .sub{color:var(--red);font-size:.75rem;letter-spacing:2px;margin-left:.5rem}
+nav a{color:var(--mute);text-transform:uppercase;letter-spacing:1.5px;font-size:.76rem;font-weight:700;margin-left:1.1rem}
+nav a:hover{color:var(--gold)}
+.wrap{max-width:860px;margin:2.2rem auto;padding:0 1.2rem}
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-left:4px solid var(--red);
+ border-radius:6px;padding:1.7rem 1.9rem;box-shadow:0 18px 44px rgba(0,0,0,.55)}
+h2{text-transform:uppercase;letter-spacing:2px;color:var(--red);font-size:1.3rem;margin:.1rem 0 1rem;border-bottom:1px solid var(--line);padding-bottom:.55rem}
+h2:after{content:"";display:block;width:58px;height:3px;background:var(--gold);margin-top:.55rem}
+label{display:block;font-size:.76rem;letter-spacing:1.3px;text-transform:uppercase;color:var(--mute);margin:.7rem 0 .15rem}
+input{display:block;width:100%;max-width:360px;padding:.6rem .7rem;margin:.1rem 0 .3rem;background:#120d09;border:1px solid var(--line);border-radius:4px;color:var(--bone);font-size:1rem}
+input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(177,18,38,.25)}
+button{padding:.6rem 1.35rem;margin:.7rem 0;background:linear-gradient(180deg,var(--red),var(--red-d));color:var(--bone);border:none;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;font-size:.84rem}
+button:hover{filter:brightness(1.15)}
+table{border-collapse:collapse;margin-top:1rem;width:100%}
+th,td{border:1px solid var(--line);padding:.5rem .8rem;text-align:left}
+th{background:var(--red-d);color:var(--bone);text-transform:uppercase;letter-spacing:1px;font-size:.76rem}
+tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+td{font-family:Consolas,'Courier New',monospace;font-size:.9rem;color:#d8cdb5}
+.err{color:#ff9a9a;background:rgba(177,18,38,.12);border-left:3px solid var(--red);padding:.6rem .9rem;border-radius:4px;margin-top:.8rem}
+.err:before{content:"\\26A0  "}
+.flag{color:var(--gold);font-weight:bold;font-size:1.1rem;font-family:Consolas,'Courier New',monospace;background:rgba(217,178,74,.08);border:1px dashed var(--gold);border-radius:4px;padding:.55rem .9rem;display:inline-block;margin-top:.6rem;text-shadow:0 0 10px rgba(217,178,74,.4);word-break:break-all}
+.foot{text-align:center;color:var(--mute);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;padding:1.4rem;margin-top:2rem;border-top:1px solid var(--line)}
+p{margin:.6rem 0}
 </style></head><body>
-<h1>Intranet du cartel</h1>
-<nav>{% if session.get('user') %}<a href="/recherche">Recherche</a> | <a href="/compte">Mon compte</a> | <a href="/logout">Deconnexion</a>{% else %}<a href="/login">Connexion</a>{% endif %}</nav>
-<hr>
+<header class="topbar">
+<div class="brand"><span class="seal">&#9733;</span>Cartel de Sinaloa<span class="sub">// Red Interna</span></div>
+<nav>{% if session.get('user') %}<a href="/recherche">Recherche</a><a href="/compte">Mon compte</a><a href="/logout">Deconnexion</a>{% else %}<a href="/login">Connexion</a>{% endif %}</nav>
+</header>
+<main class="wrap"><div class="panel">
 {{ content|safe }}
+</div></main>
+<footer class="foot">Acceso restringido &middot; Solo personal autorizado &middot; {{ title }}</footer>
 </body></html>"""
 
-LOGIN_TPL = """<h2>Connexion</h2>
+LOGIN_TPL = """<!-- FIXME securite : les identifiants sont colles dans la requete SQL sans etre filtres. A parametrer un jour. -->
+<h2>Connexion</h2>
+<p>Acces reserve aux membres du cartel. Identifiez-vous.</p>
 <form method="post">
-<input name="username" placeholder="identifiant"><br>
-<input name="password" type="password" placeholder="mot de passe"><br>
+<label>Identifiant</label>
+<input name="username" placeholder="identifiant">
+<label>Mot de passe</label>
+<input name="password" type="password" placeholder="mot de passe">
 <button>Se connecter</button>
 </form>
 {% if error %}<p class="err">{{ error }}</p>{% endif %}"""
 
-SEARCH_TPL = """<h2>Recherche de missions</h2>
-<form><input name="q" value="{{ q }}"><button>Chercher</button></form>
+SEARCH_TPL = """<!-- note : les mots de passe sont stockes sous forme d'empreinte MD5 (32 caracteres hex). -->
+<h2>Recherche de missions</h2>
+<p>Base interne des operations du cartel.</p>
+<form><input name="q" value="{{ q }}" placeholder="nom de mission..."><button>Chercher</button></form>
 {% if err %}<p class="err">{{ err }}</p>{% endif %}
 {% if rows %}<table>{% for r in rows %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</table>{% endif %}"""
 
-COMPTE_TPL = """<h2>Bienvenue, {{ user }}</h2>
-<p>Role : {{ role }}</p>
+COMPTE_TPL = """<!-- rappel : certaines pages existent hors du menu (penser a l'onglet Reseau du navigateur). -->
+<!-- certaines reponses de l'API sont encodees en base64. -->
+<h2>Bienvenue, {{ user }}</h2>
+<p>Role : <strong>{{ role }}</strong></p>
 {% if role == 'chef' %}
 <p class="err">Activite suspecte detectee sur ce compte. Zone sensible verrouillee.</p>
 <p class="flag">{{ flag_hash }}</p>
@@ -114,7 +156,7 @@ SALLE_TPL = """<h2>Salle sensible</h2>
 <p class="flag">{{ flag }}</p>
 <p>Acces au reseau interne du chef accorde. Poursuivez la mission.</p>
 {% else %}
-<form method="post"><label>Code d'acces :</label><input name="code"><button>Valider</button></form>
+<form method="post"><label>Code d'acces</label><input name="code" placeholder="code..."><button>Valider</button></form>
 {% if error %}<p class="err">{{ error }}</p>{% endif %}
 {% endif %}"""
 
@@ -124,15 +166,17 @@ def page(title, tpl, **ctx):
     return render_template_string(BASE, title=title, content=content)
 
 
-MISSION1_TPL = """<h2>Mission 1 : le coffre</h2>
+MISSION1_TPL = """<!-- memo interne : le PIN fait 4 chiffres, de 0000 a 9999. Un programme teste tout ca tres vite. -->
+<h2>Mission 1 : le coffre</h2>
 <p>Le cartel a laisse un coffre chiffre. Telechargez-le, trouvez son PIN a 4 chiffres
-avec un script Python, puis ouvrez-le. Le fichier contient l'adresse de l'intranet et le flag.</p>
-<p><a href="/static/coffre.zip">Telecharger coffre.zip</a></p>
+avec un script, puis ouvrez-le. Le fichier contient l'adresse de l'intranet et le flag.</p>
+<p><a href="/static/coffre.zip">&#9656; Telecharger coffre.zip</a></p>
 <form method="post" action="/mission/1">
+<label>Flag de l'etape 1</label>
 <input name="flag" placeholder="FLAG{...}"><button>Valider le flag</button>
 </form>
 {% if msg %}<p class="{{ cls }}">{{ msg }}</p>{% endif %}
-<p><a href="/login">Aller a l'intranet (etape 2)</a></p>"""
+<p><a href="/login">Aller a l'intranet (etape 2) &rarr;</a></p>"""
 
 
 @app.route("/")
