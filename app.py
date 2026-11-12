@@ -166,33 +166,9 @@ def page(title, tpl, **ctx):
     return render_template_string(BASE, title=title, content=content)
 
 
-MISSION1_TPL = """<!-- memo interne : le PIN fait 4 chiffres, de 0000 a 9999. Un programme teste tout ca tres vite. -->
-<h2>Mission 1 : le coffre</h2>
-<p>Le cartel a laisse un coffre chiffre. Telechargez-le, trouvez son PIN a 4 chiffres
-avec un script, puis ouvrez-le. Le fichier contient l'adresse de l'intranet et le flag.</p>
-<p><a href="/static/coffre.zip">&#9656; Telecharger coffre.zip</a></p>
-<form method="post" action="/mission/1">
-<label>Flag de l'etape 1</label>
-<input name="flag" placeholder="FLAG{...}"><button>Valider le flag</button>
-</form>
-{% if msg %}<p class="{{ cls }}">{{ msg }}</p>{% endif %}
-<p><a href="/login">Aller a l'intranet (etape 2) &rarr;</a></p>"""
-
-
 @app.route("/")
 def index():
-    return redirect(url_for("mission1"))
-
-
-@app.route("/mission/1", methods=["GET", "POST"])
-def mission1():
-    msg, cls = None, "err"
-    if request.method == "POST":
-        if request.form.get("flag", "").strip() == FLAG_PIN:
-            msg, cls = "Flag valide : etape 1 reussie. Passez a l'intranet.", "flag"
-        else:
-            msg = "Flag incorrect."
-    return page("Mission 1", MISSION1_TPL, msg=msg, cls=cls)
+    return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
