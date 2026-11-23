@@ -14,12 +14,14 @@ RESET_TOKEN = os.environ.get("RESET_TOKEN", "prof")
 
 CHEF_PASSWORD = "cobraNoir1978"   # animal + adjectif + annee : a retrouver par wordlist
 CODE_ACCES = "ALPHA-7731"         # transmis dans l'en-tete reseau X-Code-Acces
-FLAG_SQLI = "FLAG{sqli_union_ok}"
-FLAG_HASH = "FLAG{hash_cracked_ok}"
-FLAG_ROUTES = "FLAG{hidden_routes_ok}"
-FLAG_PIN = "FLAG{pin_brute_force_ok}"
-FLAG_API = "FLAG{api_chain_ok}"
-# Flag etape 1 (PIN) : dans le ZIP, pas dans l'application.
+# PREUVES : ce ne sont PAS les flags de la plateforme CyberGov.
+# L'eleve transmet la preuve trouvee a son formateur, qui lui donne en echange
+# le vrai flag a soumettre sur CyberGov pour passer a la mission suivante.
+PREUVE_SQLI = "PREUVE{injection_reussie}"
+PREUVE_HASH = "PREUVE{empreinte_cassee}"
+PREUVE_ROUTES = "PREUVE{salle_secrete_ouverte}"
+PREUVE_API = "PREUVE{dossier_final_intercepte}"
+# Etape 1 (PIN) : le flag est dans le ZIP chiffre, pas dans l'application.
 
 
 def md5(text):
@@ -40,7 +42,7 @@ def init_db():
     conn.executemany("INSERT INTO members VALUES (?, ?, ?, ?, ?, ?)", [
         (1, "recrue_04", md5("recrue2026"), "recrue", "hibou", 2001),
         (2, "el_jefe", md5(CHEF_PASSWORD), "chef", "cobra", 1978),
-        (3, "sys_audit", FLAG_SQLI, "systeme", "-", 1900),
+        (3, "sys_audit", PREUVE_SQLI, "systeme", "-", 1900),
     ])
     conn.executemany("INSERT INTO missions VALUES (?, ?, ?)", [
         (1, "Surveillance du port", "Suivi des cargaisons a Culiacan"),
@@ -143,6 +145,7 @@ COMPTE_TPL = """<!-- rappel : certaines pages existent hors du menu (penser a l'
 <p>Role : <strong>{{ role }}</strong></p>
 {% if role == 'chef' %}
 <p class="err">Activite suspecte detectee sur ce compte. Zone sensible verrouillee.</p>
+<p>Preuve a transmettre a ton formateur :</p>
 <p class="flag">{{ flag_hash }}</p>
 {% endif %}
 <script>
@@ -153,6 +156,7 @@ fetch('/api/v1/dossiers/2').then(r => r.json()).then(d => console.log(d));
 
 SALLE_TPL = """<h2>Salle sensible</h2>
 {% if ok %}
+<p>Preuve a transmettre a ton formateur :</p>
 <p class="flag">{{ flag }}</p>
 <p>Acces au reseau interne du chef accorde. Poursuivez la mission.</p>
 {% else %}
@@ -207,7 +211,7 @@ def compte():
     if "user" not in session:
         return redirect(url_for("login"))
     return page("Mon compte", COMPTE_TPL, user=session["user"], role=session["role"],
-                flag_hash=FLAG_HASH)
+                flag_hash=PREUVE_HASH)
 
 
 @app.route("/api/v1/statut")
@@ -276,7 +280,7 @@ def dossier(dossier_id):
     payload.update(OPERATION_EXTRAS.get(dossier_id, {}))
     resp = make_response(jsonify(**payload))
     if dossier_id == 3:
-        resp.headers["X-Mission-Trace"] = base64.b64encode(FLAG_API.encode()).decode()
+        resp.headers["X-Mission-Trace"] = base64.b64encode(PREUVE_API.encode()).decode()
     return resp
 
 
@@ -308,7 +312,7 @@ def salle():
             ok = True
         else:
             error = "Code incorrect."
-    return page("Salle sensible", SALLE_TPL, ok=ok, error=error, flag=FLAG_ROUTES)
+    return page("Salle sensible", SALLE_TPL, ok=ok, error=error, flag=PREUVE_ROUTES)
 
 
 @app.route("/robots.txt")
